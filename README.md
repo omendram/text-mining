@@ -1,10 +1,10 @@
 # text-mining
 Information retrieval from Agatha Christie Novel "And then there were none"
 
-
 Extract:
-	* Weapons of murders – Entity extraction
-	* The circumstances of murders – Event Extraction
-	* Timeline of murders, order in which victims died – Event and entity relationships
-	* Location of murders – Event extraction
-	* Motivations – Sentiment analysis
+
+	1. Weapons of murders – Entity extraction
+	2. The circumstances of murders – Event Extraction
+	3. Timeline of murders, order in which victims died – Event and entity relationships
+	4. Location of murders – Event extraction
+	5. Motivations – Sentiment analysis
