@@ -12,6 +12,7 @@ Extract:
 	
 
 References:
+
 	1. https://radimrehurek.com/gensim/tutorial.html
 	2. http://scikit-learn.org/stable/modules/classes.html#module-sklearn.feature_extraction.text
 	3. http://scikit-learn.org/stable/auto_examples/applications/plot_topics_extraction_with_nmf_lda.html#sphx-glr-auto-examples-applications-plot-topics-extraction-with-nmf-lda-py
