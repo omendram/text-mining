@@ -17,3 +17,5 @@ References:
 * http://scikit-learn.org/stable/modules/classes.html#module-sklearn.feature_extraction.text
 
 * http://scikit-learn.org/stable/auto_examples/applications/plot_topics_extraction_with_nmf_lda.html#sphx-glr-auto-examples-applications-plot-topics-extraction-with-nmf-lda-py
+
+* https://streamhacker.com/2010/05/10/text-classification-sentiment-analysis-naive-bayes-classifier/
