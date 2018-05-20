@@ -6,6 +6,10 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
 import pprint
+from nltk.tag.stanford import StanfordNERTagger
+from nltk.corpus import wordnet
+import pickle
+from difflib import SequenceMatcher
 
 printer = pprint.PrettyPrinter(indent=4)
 lines = []
@@ -81,12 +85,6 @@ for doc in d2:
             qCount +=1
     docCounter +=1
 
-
-    
-        
-
-
-
 #idf function using sklearn
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(doculist)
@@ -135,6 +133,20 @@ text_file.write(str(dict(zip(vectorizer.get_feature_names(),idf) )).encode('utf-
 text_file.close()
 
 print('\n ## Named Entities ## \n')
+
+# Checks whether a similar string already exists in the array
+def check_similarity_metric(str, stringList):
+    noMatchFound = True
+    name = str
+    for index, string in enumerate(stringList):
+        if SequenceMatcher(None, name, string).ratio() > 0.45:
+            if len(name) < len(string):
+                stringList[index] = string
+
+            noMatchFound = False
+            break
+    return noMatchFound, stringList
+
 # Sort according to their scores
 docListsWithWeights.sort(key=itemgetter(0), reverse=True)
 
@@ -146,9 +158,41 @@ for counter in range(15):
 
     for chunk in chunked_text:
         if type(chunk) == nltk.Tree:
-            named_entities.append(" ".join([word for word, position in chunk.leaves()]))
+            temp_name = " ".join([word for word, position in chunk.leaves()])
+            metric, temp_list = check_similarity_metric(temp_name, named_entities)
+            
+            if metric:
+                named_entities.append(temp_name)
+            else:
+                named_entities = temp_list
 
-    named_entities = list(set(named_entities)) # Gets rid of duplicates if any
-    printer.pprint(named_entities)
+    print('People found in document no.', counter)
+    print(named_entities)
 
 #TODO Sort out false values, sentiment, other information
+all_named_entities = []
+all_named_entities_other = []
+
+# This gives a lot of information, entities include persons, and sometimes non-person entities as well.
+# Need to figure out a good way to filter them out.
+for i in doculist:
+    chunked_text = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(i)))
+    
+    #NLTK Tools
+    for chunk in chunked_text:
+        if type(chunk) == nltk.Tree and chunk.label() == 'PERSON':
+                name = " ".join([word for word, position in chunk.leaves()])
+                metric, temp_list = check_similarity_metric(name, all_named_entities)
+
+                if metric:
+                    all_named_entities.append(name)
+                else:
+                    all_named_entities = temp_list
+
+print('Total entites found: ', len(all_named_entities))
+print(all_named_entities)
+
+#print(len(all_named_entities))
+#for names in all_named_entities:
+#    print(names)
+#printer.pprint(named_entities)
