@@ -171,7 +171,6 @@ for counter in range(15):
 
 #TODO Sort out false values, sentiment, other information
 all_named_entities = []
-all_named_entities_other = []
 
 # This gives a lot of information, entities include persons, and sometimes non-person entities as well.
 # Need to figure out a good way to filter them out.
