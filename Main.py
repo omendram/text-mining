@@ -6,7 +6,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from operator import itemgetter
 import pprint
-from nltk.tag.stanford import StanfordNERTagger
 from nltk.corpus import wordnet
 import pickle
 from difflib import SequenceMatcher
