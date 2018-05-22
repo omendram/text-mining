@@ -9,6 +9,7 @@ import pprint
 from nltk.corpus import wordnet
 import pickle
 from difflib import SequenceMatcher
+import gensim
 
 printer = pprint.PrettyPrinter(indent=4)
 lines = []
@@ -204,8 +205,6 @@ def namechecker(i,j,text):
                             f = False
                         else:
                             entities.append(foundNamedEntities[i][j])
-    
-
                     
         
     
@@ -219,10 +218,6 @@ for text in doculist2:
 entities = list(set(entities))
 print(entities)
             
-
-
-
-
 
 
 
@@ -251,3 +246,34 @@ for i in doculist2:
 #for names in all_named_entities:
 #    print(names)
 #printer.pprint(named_entities)
+
+
+# Timeline/ Order of death
+
+
+def getPOS_Tags(sentences):
+    sentences = nltk.sent_tokenize(sentences)
+    sentences = [nltk.word_tokenize(sent) for sent in sentences]
+    sentences = [nltk.pos_tag(sent) for sent in sentences]
+
+    return sentences
+
+
+sentences = getPOS_Tags(" ".join(lines))
+
+grammar = "PEOPLE: {<NNP>+<VBD>}"
+cp = nltk.RegexpParser(grammar)
+result_pos = []
+
+for sentence in sentences:
+    result = cp.parse(sentence)
+
+    if (result.label() == 'PEOPLE'):
+        result_pos.append(result)
+    else:
+        for item in result:
+            if type(item) == nltk.Tree and item.label() == 'PEOPLE':
+                result_pos.append(item)
+
+
+printer.pprint(result_pos)
