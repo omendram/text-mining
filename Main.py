@@ -9,6 +9,10 @@ import pprint
 from nltk.corpus import wordnet
 import pickle
 from difflib import SequenceMatcher
+from nltk.corpus import wordnet
+from textblob.classifiers import NaiveBayesClassifier
+
+
 
 printer = pprint.PrettyPrinter(indent=4)
 lines = []
@@ -155,7 +159,7 @@ def check_similarity_metric(str, stringList):
 docListsWithWeights.sort(key=itemgetter(0), reverse=True)
 
 # Show names in top 15 docs found.
-for counter in range(15):
+for counter in range(25):
     detectedText = docListsWithWeights[counter][1]
     detectedText.lower()
     chunked_text = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(detectedText)))
@@ -284,7 +288,7 @@ for i in range(len(nameslist)):
                         
                     
 nameslist = nameslistTemp
-print(nameslist)
+#print(nameslist)
 entitylist = []
 
 
@@ -303,17 +307,46 @@ nameslist        if type(chunk) == nltk.Tree and (chunk.label() == 'PERSON') :
             for entity in entities:
                 if temp_name == entity:
                     nextWord = " ".join([word for word, position in chunked_text.leaves()])
- """                   
-            
-            
- 
-
-
-
+                   
 
             
+            
+def get_word_synonyms_from_sent(word, sent):
+   word_synonyms = []
+   for synset in wordnet.synsets(word):
+       for lemma in synset.lemma_names():
+           if lemma in sent and lemma != word:
+               word_synonyms.append(lemma)
+   return word_synonyms
+
+query2 = []
+
+for lis in nameslist:
+    for name in lis:
+        name = name.split()
+        for nam in name:
+            query2.append(nam)
+
+print(query2)
+
+detectedText = docListsWithWeights[2][1]
+detectedText = detectedText.lower()
 
 
+
+#syn = get_word_synonyms_from_sent(word,detectedText)
+#print(syn)
+"""
+
+
+train = []
+with open("train.txt",encoding = 'latin-1') as f:
+    for line in f:
+        train.append((line.strip(),'neg'))
+
+cl = NaiveBayesClassifier(train)            
+
+print(cl.classify("Their burgers are amazing"))
 
 #print('Total entites found: ', len(all_named_entities))
 #print(all_named_entities)
