@@ -141,8 +141,6 @@ for i in range(len(doculist)):
 #text_file.write(str(dict(zip(vectorizer.get_feature_names(),idf) )).encode('utf-8').strip())
 #text_file.close()
 
-print('\n ## Named Entities ## \n')
-
 foundNamedEntities = []
 
 # Checks whether a similar string already exists in the array
@@ -159,7 +157,7 @@ def check_similarity_metric(str, stringList):
 docListsWithWeights.sort(key=itemgetter(0), reverse=True)
 
 # Show names in top 15 docs found.
-for counter in range(25):
+for counter in range(15):
     detectedText = docListsWithWeights[counter][1]
     detectedText.lower()
     chunked_text = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(detectedText)))
@@ -255,6 +253,7 @@ for word in entityOrder1:
                 if("Mrs." in y and "Mrs." not in x):
                     break
                 tmp.append(y)
+            tmp = list(set(tmp))
     nameslist.append(tmp)
 
 #print(nameslist)
@@ -340,13 +339,50 @@ detectedText = detectedText.lower()
 
 
 train = []
-with open("train.txt",encoding = 'latin-1') as f:
+
+with open("murdertrain.txt",encoding = 'latin-1') as f:
     for line in f:
-        train.append((line.strip(),'neg'))
+        train.append((line.strip(),'murder'))
 
-cl = NaiveBayesClassifier(train)            
+with open("pos-train.txt",encoding = 'latin-1') as f:
+    for line in f:
+        train.append((line.strip(),'notMurder'))
 
-print(cl.classify("Their burgers are amazing"))
+cl = NaiveBayesClassifier(train)
+counter = 0
+
+flat_names_list = [item for sublist in nameslist for item in sublist]
+print(flat_names_list)
+
+def checkEntities(sentence):
+    exists = False
+
+    for name in flat_names_list:
+        if sentence.find(name) >= 0:
+            exists = True
+
+    return exists
+
+
+all_murders = []
+for doc_found in docListsWithWeights:
+    if doc_found[0] > 7.0:            
+        sentences = doc_found[1]
+        sentences = sentences.replace('Mrs.', 'Mrs')
+        sentences = sentences.replace('Mr.', 'Mrs')
+        sentences = sentences.replace('Dr.', 'Dr')
+        counter += 1
+        sentences =  sentences.split('.')
+        
+
+        for sentence in sentences:
+            if (cl.classify(sentence) == 'murder'):
+                if checkEntities(sentence):
+                    all_murders.append(sentence)
+
+for murder in all_murders:
+    print(murder)
+    print('\n')
 
 #print('Total entites found: ', len(all_named_entities))
 #print(all_named_entities)
