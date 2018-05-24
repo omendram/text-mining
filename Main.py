@@ -9,7 +9,6 @@ import pprint
 from nltk.corpus import wordnet
 import pickle
 from difflib import SequenceMatcher
-import gensim
 
 printer = pprint.PrettyPrinter(indent=4)
 lines = []
@@ -123,10 +122,10 @@ for i in range(len(doculist)):
 
     #Threshold placed by me (You can make it whatever you want)
     if score < 30 and score > 10:
-        
-        print(i) # prints the document number 
-        print (docWeight[i]) # Score of document i
-        print(doculist2[i]) # put i in the doculist array, returns the text found
+        continue
+        #print(i) # prints the document number 
+        #print (docWeight[i]) # Score of document i
+        #print(doculist2[i]) # put i in the doculist array, returns the text found
     score = 0
     
 
@@ -179,12 +178,15 @@ for counter in range(15):
     foundNamedEntities.append(named_entities)
 
 
-titels = ["Dr.","Mr.","Miss","Mrs."]
+titels = ["Dr.","Mr.","Mrs."]
 entities = []
 temp = ""
 
-def namechecker(i,j,text):
+
+def namechecker(i,j,textNr):
+    text = doculist2[textNr]
     f = False
+    tmp = ""
     entity = foundNamedEntities[i][j].split()
     result = text.split()
     for k in range(len(result)):
@@ -203,41 +205,115 @@ def namechecker(i,j,text):
                         if f == True:
                             entities.append(found)
                             f = False
+                            
                         else:
                             entities.append(foundNamedEntities[i][j])
+    
+
                     
         
     
-for text in doculist2:
+for k in range(len(doculist2)):
     for i in range(len(foundNamedEntities)):
         for j in range(len(foundNamedEntities[i])):
                 if(j + 1 < len(foundNamedEntities[i])):
-                    namechecker(i,j,text)
+                    namechecker(i,j,k)
     
 
-entities = list(set(entities))
-print(entities)
-            
+#entities = list(set(entities))
+#print(entities)
+
+entityOrder1 = []
+
+for entity in entities:
+    if entity not in entityOrder1:
+        entityOrder1.insert(0,entity)
+    else:
+        entityOrder1 = list(filter(lambda a: a != entity,entityOrder1))
+        entityOrder1.insert(0,entity)
+        
+#print(entityOrder1)
 
 
+nameslist = []
+tmp = []
+for word in entityOrder1:
+    if word in tmp:
+        continue
+    words = word.split()
+    tmp = []
+    for x in words:
+        for y in entityOrder1:
+            if x in y and x not in titels and x != "Miss":
+                if("Mrs." in word):
+                    tmp.append(word)
+                    break
+                if("Mrs." in y and "Mrs." not in x):
+                    break
+                tmp.append(y)
+    nameslist.append(tmp)
+
+#print(nameslist)
+#print("")
+
+nameslistTemp = []
+tmplist = []
+x = 0
+for i in range(len(nameslist)):
+    if i in tmplist:
+        continue
+    for name in nameslist[i]:
+        name = name.split()
+        for word in name:
+            y = 0
+            for j in range(len(nameslist)):
+                if nameslist[i] == nameslist[j] and x != y:
+                    tmplist.append(j)
+                for word2 in nameslist[j]:
+                    if "Mrs." in name or "Mrs." in word2:
+                        break
+
+                    if word in word2 and word2 not in nameslist[i] and word not in titels and word != "Miss" and nameslist[i] != nameslist[j]:
+                        nameslist[i].append(word2)
+                        tmplist.append(j)
+            y = y +1
+    nameslistTemp.append(nameslist[i])
+    x = x + 1
+    
+
+                        
+                    
+nameslist = nameslistTemp
+print(nameslist)
+entitylist = []
 
 
 #TODO Sort out false values, sentiment, other information
 all_named_entities = []
 
+"""
 # This gives a lot of information, entities include persons, and sometimes non-person entities as well.
 # Need to figure out a good way to filter them out.
 for i in doculist2:
     chunked_text = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(i)))
     #NLTK Tools
     for chunk in chunked_text:
-        if type(chunk) == nltk.Tree and (chunk.label() == 'PERSON') :
-                name = " ".join([word for word, position in chunk.leaves()])
-                metric, temp_list = check_similarity_metric(name, all_named_entities)
-                if metric:
-                    all_named_entities.append(name)
-                else:
-                    all_named_entities = temp_list
+nameslist        if type(chunk) == nltk.Tree and (chunk.label() == 'PERSON') :
+            temp_name = " ".join([word for word, position in chunk.leaves()])
+            for entity in entities:
+                if temp_name == entity:
+                    nextWord = " ".join([word for word, position in chunked_text.leaves()])
+ """                   
+            
+            
+ 
+
+
+
+
+            
+
+
 
 #print('Total entites found: ', len(all_named_entities))
 #print(all_named_entities)
@@ -246,34 +322,3 @@ for i in doculist2:
 #for names in all_named_entities:
 #    print(names)
 #printer.pprint(named_entities)
-
-
-# Timeline/ Order of death
-
-
-def getPOS_Tags(sentences):
-    sentences = nltk.sent_tokenize(sentences)
-    sentences = [nltk.word_tokenize(sent) for sent in sentences]
-    sentences = [nltk.pos_tag(sent) for sent in sentences]
-
-    return sentences
-
-
-sentences = getPOS_Tags(" ".join(lines))
-
-grammar = "PEOPLE: {<NNP>+<VBD>}"
-cp = nltk.RegexpParser(grammar)
-result_pos = []
-
-for sentence in sentences:
-    result = cp.parse(sentence)
-
-    if (result.label() == 'PEOPLE'):
-        result_pos.append(result)
-    else:
-        for item in result:
-            if type(item) == nltk.Tree and item.label() == 'PEOPLE':
-                result_pos.append(item)
-
-
-printer.pprint(result_pos)
