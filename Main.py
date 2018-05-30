@@ -11,6 +11,10 @@ import pickle
 from difflib import SequenceMatcher
 from nltk.corpus import wordnet
 from textblob.classifiers import NaiveBayesClassifier
+import warnings
+warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
+
+import gensim
 
 
 
@@ -25,7 +29,6 @@ with open("text.txt",encoding = 'latin-1') as f:
         lines.append(line)
         count = count +1
         
-print(count)
 b = "!@#$.,?-/_%^&*()+=\":;"
 
 
@@ -34,7 +37,6 @@ for line in lines:
     for char in b:
         line = line.replace(char,"")
     lines2.append(line)
-
         
         
 # The query that is used for tf-idf, the query is a simple one that
@@ -183,7 +185,7 @@ for counter in range(15):
 titels = ["Dr.","Mr.","Mrs."]
 entities = []
 temp = ""
-
+filterList = ["said","ate","drank","said:","thought","cried","slept","walked","ran","tottered"];
 
 def namechecker(i,j,textNr):
     text = doculist2[textNr]
@@ -203,7 +205,7 @@ def namechecker(i,j,textNr):
                             break
                             
                 if(k+1 < len(result)):
-                    if (result[k+1] == "said" or result[k+1] == "said:" ):
+                    if (result[k+1] in filterList):
                         if f == True:
                             entities.append(found)
                             f = False
@@ -284,60 +286,37 @@ for i in range(len(nameslist)):
     x = x + 1
     
 
-                        
-                    
+
+def getPOS_Tags(sentences):
+    sentences = nltk.sent_tokenize(sentences)
+    sentences = [nltk.word_tokenize(sent) for sent in sentences]
+    sentences = [nltk.pos_tag(sent) for sent in sentences]
+
+    return sentences
+
+
+sentences = getPOS_Tags(" ".join(lines))
+
+grammar = "PEOPLE: {<NNP>+<VBD>}"
+cp = nltk.RegexpParser(grammar)
+result_pos = []
+
+for sentence in sentences:
+    result = cp.parse(sentence)
+
+    if (result.label() == 'PEOPLE'):
+        result_pos.append(result)
+    else:
+        for item in result:
+            if type(item) == nltk.Tree and item.label() == 'PEOPLE':
+                result_pos.append(item)
+
+docListsWithWeights.sort(key=itemgetter(0), reverse=True)
+
+for item in result_pos:
+    leaves = item.leaves()
+                          
 nameslist = nameslistTemp
-#print(nameslist)
-entitylist = []
-
-
-#TODO Sort out false values, sentiment, other information
-all_named_entities = []
-
-"""
-# This gives a lot of information, entities include persons, and sometimes non-person entities as well.
-# Need to figure out a good way to filter them out.
-for i in doculist2:
-    chunked_text = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(i)))
-    #NLTK Tools
-    for chunk in chunked_text:
-nameslist        if type(chunk) == nltk.Tree and (chunk.label() == 'PERSON') :
-            temp_name = " ".join([word for word, position in chunk.leaves()])
-            for entity in entities:
-                if temp_name == entity:
-                    nextWord = " ".join([word for word, position in chunked_text.leaves()])
-                   
-
-            
-            
-def get_word_synonyms_from_sent(word, sent):
-   word_synonyms = []
-   for synset in wordnet.synsets(word):
-       for lemma in synset.lemma_names():
-           if lemma in sent and lemma != word:
-               word_synonyms.append(lemma)
-   return word_synonyms
-
-query2 = []
-
-for lis in nameslist:
-    for name in lis:
-        name = name.split()
-        for nam in name:
-            query2.append(nam)
-
-print(query2)
-
-detectedText = docListsWithWeights[2][1]
-detectedText = detectedText.lower()
-
-
-
-#syn = get_word_synonyms_from_sent(word,detectedText)
-#print(syn)
-"""
-
-
 train = []
 
 with open("murdertrain.txt",encoding = 'latin-1') as f:
@@ -352,7 +331,7 @@ cl = NaiveBayesClassifier(train)
 counter = 0
 
 flat_names_list = [item for sublist in nameslist for item in sublist]
-print(flat_names_list)
+#printer.pprint(flat_names_list)
 
 def checkEntities(sentence):
     exists = False
@@ -362,7 +341,6 @@ def checkEntities(sentence):
             exists = True
 
     return exists
-
 
 all_murders = []
 for doc_found in docListsWithWeights:
@@ -380,14 +358,9 @@ for doc_found in docListsWithWeights:
                 if checkEntities(sentence):
                     all_murders.append(sentence)
 
-for murder in all_murders:
-    print(murder)
+for no, murder in enumerate(all_murders):
+    murder = murder.replace('\n', '')
+    murder = murder.replace('"', '')
+    tags = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(murder)))
+    print(tags)
     print('\n')
-
-#print('Total entites found: ', len(all_named_entities))
-#print(all_named_entities)
-
-#print(len(all_named_entities))foundNamedEntities[i][j]
-#for names in all_named_entities:
-#    print(names)
-#printer.pprint(named_entities)
