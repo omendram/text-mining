@@ -13,8 +13,10 @@ from nltk.corpus import wordnet
 from textblob.classifiers import NaiveBayesClassifier
 import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
-
+from nltk.grammar import DependencyGrammar
+import re
 import gensim
+from wordcloud import  WordCloud
 
 
 
@@ -157,10 +159,12 @@ def check_similarity_metric(str, stringList):
 
 # Sort according to their scores
 docListsWithWeights.sort(key=itemgetter(0), reverse=True)
+file = open('docs.txt', 'a')
 
 # Show names in top 15 docs found.
 for counter in range(15):
     detectedText = docListsWithWeights[counter][1]
+    file.write(detectedText)
     detectedText.lower()
     chunked_text = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(detectedText)))
     named_entities = []
@@ -342,6 +346,21 @@ def checkEntities(sentence):
 
     return exists
 
+#SVM
+train_x = [word[0] for word in train]
+train_y = [word[1] for word in train]
+from sklearn.linear_model import SGDClassifier
+from sklearn.pipeline import Pipeline
+
+text_clf_svm = Pipeline([('vect', CountVectorizer()),('tfidf', TfidfTransformer()), ('clf-svm', SGDClassifier(alpha=1e-3, max_iter=15))])
+_ = text_clf_svm.fit(train_x, train_y)
+
+for i in range(10):
+    strdd = str(input('jfajdn'))
+    print(text_clf_svm.predict([strdd]))
+
+#SVM
+
 all_murders = []
 for doc_found in docListsWithWeights:
     if doc_found[0] > 7.0:            
@@ -358,9 +377,99 @@ for doc_found in docListsWithWeights:
                 if checkEntities(sentence):
                     all_murders.append(sentence)
 
+tagged_results = []
+
 for no, murder in enumerate(all_murders):
-    murder = murder.replace('\n', '')
-    murder = murder.replace('"', '')
-    tags = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(murder)))
-    print(tags)
-    print('\n')
+    symbols = '!@#$.?-/_%^&*()+=\":'
+
+    for char in symbols:
+        murder = murder.replace(char,"")
+
+    for salutation in ['Mr ', 'Mrs ', 'Miss ', 'Dr ']:
+        murder = murder.replace(salutation, salutation.strip())
+    
+    if len(murder)> 4:
+        tags = nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(murder)))    
+        tagged_results.append(tags)
+
+
+
+# resolve co-reference
+def splitEnds(inputStr):
+    sentence = inputStr.split()
+    sentenceSplits = []
+    answer = ''
+
+    for idx, word in enumerate(sentence):
+        answer = answer + ' ' + word
+
+        if idx > 1:
+            if word == 'and' or word[-1] == ',' or word == ',' or idx == len(sentence)-1:
+                if len(answer.replace('and', '').strip()) > 2:
+                    sentenceSplits.append(answer)
+                answer = ''
+
+    return sentenceSplits;
+
+
+# Resolve co-reference
+def constructResults(result):
+    data = {}
+    currentKey = ''
+    str_refs = ''
+    result = result.leaves()
+    entityLabels = ['NNP', 'NNS']
+
+    for i in range(len(result)):
+        items = result[i]
+
+        if items[1] in entityLabels:
+            if i > 1 and result[i-1] in entityLabels:
+                currentKey =  currentKey + result[i-1]
+                continue
+            else:
+                currentKey = items[0]
+        else:
+            if len(currentKey) > 2:
+                data[currentKey] = items[0]
+                str_refs = str_refs + ' ' + items[0]
+
+    if len(data.keys()) == 1:
+        for key in data:
+            data[key] = str_refs.strip()
+
+    if len(data.keys()) > 1:
+        events = splitEnds(str_refs)
+        events_length = len(events)
+        data_length = len(data)
+
+        if events_length > data_length:
+            temp = []
+            diff = events_length - data_length
+            
+            for idx,sent in enumerate(events):
+                if idx >= diff:
+                    temp.append(" ".join(events[0:diff]) + ' ' + sent)
+            events = temp
+            events_length = data_length = 1
+
+        if events_length == data_length:
+            for idx, key in enumerate(data):
+                data[key] = events[idx].strip()
+    return data
+
+
+# Collect data for each entity
+full_results = {}
+for res in tagged_results:
+    if type(res) == nltk.tree.Tree:
+        value = constructResults(res)
+        
+        for key in value:
+            if key in full_results.keys():
+                full_results[key] = full_results[key] + ' ' + value[key]
+            else:
+                full_results[key] = value[key]
+
+#SVM
+
