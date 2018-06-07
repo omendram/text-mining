@@ -30,25 +30,25 @@ with open("text.txt",encoding = 'latin-1') as f:
     for line in f:
         lines.append(line)
         count = count +1
-        
+
+
+# Removes all the characters that are not needed        
 b = "!@#$.,?-/_%^&*()+=\":;"
-
-
-# Removes all the characters that are not needed
 for line in lines:
     for char in b:
         line = line.replace(char,"")
     lines2.append(line)
         
         
-# The query that is used for tf-idf, the query is a simple one that
-# uses typicle words for murders
+# The query that is used for tf-idf
 query = ["murder","death","dead","died","killed","murdered","die","murderer"]
-queryCount = []
 
-# Query count is used for tf to hold the count the query words in a certain document
+
+# Query count holds the term frequencies for each word in the query
+
+queryCount = []
 for a in range(len(query)):
-    a = numpy.zeros(389)
+    a = numpy.zeros(259)
     queryCount.append(a)
 
 
@@ -59,7 +59,10 @@ count =0
 
 
 # splits the text file into multiple documents, in this case:
-# each document is 15 lines, no recursion of sentences (was not usefull)
+# each document is 15 lines
+# We created 2 collections, each have the same subsections of the novel.
+# However, one has the characters removed, the other keeps them.
+
 for j in range(259):
     document = ''
     document2 =''
@@ -75,7 +78,7 @@ for j in range(259):
     d2.append(doc2)
     count += 15
 
-# Collects the count of words
+# Collects the amount of words in a document
 def wordCount(a,b):
     queryCount[a][b] += 1
     
@@ -84,7 +87,7 @@ check = False
 qCount =0
 docCounter =0
 
-# tf : counts the words of the query
+# tf : counts the frequencies of the query words in each document
 for doc in d2:
     number = 0
     result = doc.split()
@@ -108,10 +111,9 @@ feature_names = vectorizer.get_feature_names()
 count = 0
 score = 0
 docWeight = []
+
 # docWeight holds the weight of each document, the higher the weight the more "usefull"
-# the document (not all info is found in these "usefull" documents), sometimes murder or
-# death is not always mentioned, but usually in the area of these document a murder has
-# happened
+# the document 
 
 for a in range(len(doculist)):
     a = numpy.zeros(1)
@@ -124,26 +126,11 @@ for i in range(len(doculist)):
     for j in range(len(query)):
         score = score + (idf[vectorizer.vocabulary_.get(query[j])] * queryCount[j][i])
     docWeight[i] = score
-
-    # Make a list of tuple, with doc and their weights, helps with sorting and chronological stuff
     docListsWithWeights.append((docWeight[i], doculist2[i], i)) 
-
-    #Threshold placed by me (You can make it whatever you want)
     if score < 30 and score > 10:
         continue
-        #print(i) # prints the document number 
-        #print (docWeight[i]) # Score of document i
-        #print(doculist2[i]) # put i in the doculist array, returns the text found
     score = 0
     
-
-#print(vectorizer.vocabulary_.get('murderess'))
-#print(idf[vectorizer.vocabulary_.get('murderess')])
-#print(feature_names[vectorizer.vocabulary_.get('murderess')])
-
-#text_file = open("Output.txt", "wb")
-#text_file.write(str(dict(zip(vectorizer.get_feature_names(),idf) )).encode('utf-8').strip())
-#text_file.close()
 
 foundNamedEntities = []
 
@@ -178,11 +165,6 @@ for counter in range(15):
             else:
                 named_entities = temp_list
     named_entities = list(set(named_entities))
-
-    
-    #print('People found in document no.', counter)
-    #print(chunked_text)
-    #print(named_entities)
     foundNamedEntities.append(named_entities)
 
 
@@ -191,6 +173,7 @@ entities = []
 temp = ""
 filterList = ["said","ate","drank","said:","thought","cried","slept","walked","ran","tottered"];
 
+# Checks wether the entity is human and it does anything in the story
 def namechecker(i,j,textNr):
     text = doculist2[textNr]
     f = False
@@ -218,9 +201,8 @@ def namechecker(i,j,textNr):
                             entities.append(foundNamedEntities[i][j])
     
 
-                    
-        
-    
+
+# For all the entities found, check if they are human and if they are relevant    
 for k in range(len(doculist2)):
     for i in range(len(foundNamedEntities)):
         for j in range(len(foundNamedEntities[i])):
@@ -228,11 +210,9 @@ for k in range(len(doculist2)):
                     namechecker(i,j,k)
     
 
-#entities = list(set(entities))
-#print(entities)
 
+#Returns a list with the names in order of last thing done
 entityOrder1 = []
-
 for entity in entities:
     if entity not in entityOrder1:
         entityOrder1.insert(0,entity)
@@ -240,9 +220,8 @@ for entity in entities:
         entityOrder1 = list(filter(lambda a: a != entity,entityOrder1))
         entityOrder1.insert(0,entity)
         
-#print(entityOrder1)
 
-
+#Clusters the entities together by similarity in name.
 nameslist = []
 tmp = []
 for word in entityOrder1:
@@ -261,9 +240,6 @@ for word in entityOrder1:
                 tmp.append(y)
             tmp = list(set(tmp))
     nameslist.append(tmp)
-
-#print(nameslist)
-#print("")
 
 nameslistTemp = []
 tmplist = []
@@ -289,8 +265,11 @@ for i in range(len(nameslist)):
     nameslistTemp.append(nameslist[i])
     x = x + 1
     
+nameslist = nameslistTemp
 
 
+
+######### From here add comments because not sure whats happening
 def getPOS_Tags(sentences):
     sentences = nltk.sent_tokenize(sentences)
     sentences = [nltk.word_tokenize(sent) for sent in sentences]
@@ -320,7 +299,6 @@ docListsWithWeights.sort(key=itemgetter(0), reverse=True)
 for item in result_pos:
     leaves = item.leaves()
                           
-nameslist = nameslistTemp
 train = []
 
 with open("murdertrain.txt",encoding = 'latin-1') as f:
@@ -455,3 +433,4 @@ for res in tagged_results:
             else:
                 full_results[key] = value[key]
                 
+print(full_results)
