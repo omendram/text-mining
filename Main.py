@@ -333,7 +333,6 @@ with open("pos-train.txt",encoding = 'latin-1') as f:
 
 cl = NaiveBayesClassifier(train)
 counter = 0
-
 flat_names_list = [item for sublist in nameslist for item in sublist]
 #printer.pprint(flat_names_list)
 
@@ -345,21 +344,6 @@ def checkEntities(sentence):
             exists = True
 
     return exists
-
-#SVM
-train_x = [word[0] for word in train]
-train_y = [word[1] for word in train]
-from sklearn.linear_model import SGDClassifier
-from sklearn.pipeline import Pipeline
-
-text_clf_svm = Pipeline([('vect', CountVectorizer()),('tfidf', TfidfTransformer()), ('clf-svm', SGDClassifier(alpha=1e-3, max_iter=15))])
-_ = text_clf_svm.fit(train_x, train_y)
-
-for i in range(10):
-    strdd = str(input('jfajdn'))
-    print(text_clf_svm.predict([strdd]))
-
-#SVM
 
 all_murders = []
 for doc_found in docListsWithWeights:
@@ -470,6 +454,4 @@ for res in tagged_results:
                 full_results[key] = full_results[key] + ' ' + value[key]
             else:
                 full_results[key] = value[key]
-
-#SVM
-
+                
