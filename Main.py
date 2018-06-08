@@ -294,13 +294,12 @@ for sentence in sentences:
             if type(item) == nltk.Tree and item.label() == 'PEOPLE':
                 result_pos.append(item)
 
+# Sort documents according to tfidf scores
 docListsWithWeights.sort(key=itemgetter(0), reverse=True)
-
-for item in result_pos:
-    leaves = item.leaves()
                           
 train = []
 
+# Training Naive Bayes Classifier
 with open("murdertrain.txt",encoding = 'latin-1') as f:
     for line in f:
         train.append((line.strip(),'murder'))
@@ -312,8 +311,8 @@ with open("pos-train.txt",encoding = 'latin-1') as f:
 cl = NaiveBayesClassifier(train)
 counter = 0
 flat_names_list = [item for sublist in nameslist for item in sublist]
-#printer.pprint(flat_names_list)
 
+# check if meanining-ful sentences cover entities
 def checkEntities(sentence):
     exists = False
 
@@ -323,6 +322,7 @@ def checkEntities(sentence):
 
     return exists
 
+# Bayes Classifier on relevant document sentences
 all_murders = []
 for doc_found in docListsWithWeights:
     if doc_found[0] > 7.0:            
@@ -341,6 +341,7 @@ for doc_found in docListsWithWeights:
 
 tagged_results = []
 
+# APPLY POS on meaning-ful sentences
 for no, murder in enumerate(all_murders):
     symbols = '!@#$.?-/_%^&*()+=\":'
 
@@ -432,5 +433,6 @@ for res in tagged_results:
                 full_results[key] = full_results[key] + ' ' + value[key]
             else:
                 full_results[key] = value[key]
-                
+   
+# Show results            
 print(full_results)
