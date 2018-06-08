@@ -436,7 +436,7 @@ for item in pos_tagged_murders:
         if key in final_results and final_results[key] != data[key]:
             final_results[key] = final_results[key] + ' | ' + data[key]
         else:
-            if key.istitle():
+            if checkEntities(key):
                 final_results[key] = data[key]
 
 # PRINT FINAL RESULTS
