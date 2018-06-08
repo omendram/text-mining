@@ -11,14 +11,8 @@ import pickle
 from difflib import SequenceMatcher
 from nltk.corpus import wordnet
 from textblob.classifiers import NaiveBayesClassifier
-import warnings
-warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 from nltk.grammar import DependencyGrammar
-import re
-import gensim
 from wordcloud import  WordCloud
-
-
 
 printer = pprint.PrettyPrinter(indent=4)
 lines = []
